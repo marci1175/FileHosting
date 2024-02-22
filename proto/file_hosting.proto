@@ -9,6 +9,7 @@ service Serving {
 //Path were asking for
 message FileRequest {
   string path = 1;
+  string password = 2;
 }
 
 //Bytes of the file weve been asked for
@@ -17,7 +18,7 @@ message FileReply {
 }
  
 service Communication {
-  rpc Providelist (Ping) returns (FileList) {}
+  rpc ProvideList (Ping) returns (FileList) {}
 }
 
 //Serialized Vec<PathItem>
@@ -27,5 +28,5 @@ message FileList {
 
 //Literally an empty packet just to show that we are here
 message Ping {
-
+  string password = 1;
 }

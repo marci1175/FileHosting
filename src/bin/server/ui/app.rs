@@ -1,5 +1,6 @@
-use std::{fs, path::PathBuf};
-use egui::{vec2, RichText};
+use egui::{vec2, Response, RichText};
+use std::{fs, path::PathBuf, sync::Arc};
+use tokio::{sync::mpsc, task::JoinHandle};
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 enum PathItem {
@@ -10,12 +11,10 @@ enum PathItem {
 impl PathItem {
     fn get_path(&self) -> PathBuf {
         return match self {
-            PathItem::Folder(folder) => {
-                folder.path.clone()
-            },
+            PathItem::Folder(folder) => folder.path.clone(),
             PathItem::File(file) => file.clone(),
-        }
-    } 
+        };
+    }
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
@@ -27,22 +26,40 @@ struct FolderItem {
 
 impl FolderItem {
     fn new(path: PathBuf) -> Self {
-        Self { path: path.clone(), opened: false, entries: iter_folder(&path) }
+        Self {
+            path: path.clone(),
+            opened: false,
+            entries: iter_folder(&path),
+        }
     }
 }
-
-
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct Server {
     shared_folders: Vec<PathItem>,
+
+    //Server doe not persist
+    #[serde(skip)]
+    server: Option<JoinHandle<()>>,
+
+    #[serde(skip)]
+    rx: mpsc::Receiver<()>,
+    #[serde(skip)]
+    sx: mpsc::Sender<()>,
 }
 
 impl Default for Server {
     fn default() -> Self {
+        //Default channel, this is not going to be used
+        let (sx, rx) = mpsc::channel::<()>(0);
+        
         Self {
             shared_folders: Vec::new(),
+            server: None,
+
+            rx,
+            sx,
         }
     }
 }
@@ -78,7 +95,8 @@ impl eframe::App for Server {
                     //Add folder
                     if let Some(added_folders) = rfd::FileDialog::new().pick_folders() {
                         for folder in added_folders {
-                            self.shared_folders.push(PathItem::Folder(FolderItem::new(folder)));
+                            self.shared_folders
+                                .push(PathItem::Folder(FolderItem::new(folder)));
                         }
                     };
                 }
@@ -104,7 +122,8 @@ impl eframe::App for Server {
                                         group.get_path().file_name().unwrap().to_string_lossy()
                                     ))
                                     .size(20.),
-                                ).on_hover_text(format!("Full path: {:?}", group.get_path()));
+                                )
+                                .on_hover_text(format!("Full path: {:?}", group.get_path()));
 
                                 //and delete button
                                 ui.allocate_ui(vec2(20., 20.), |ui| {
@@ -119,11 +138,9 @@ impl eframe::App for Server {
                                 });
                             });
 
-                            
                             if let PathItem::Folder(folder) = group {
                                 render_path(&mut folder.entries, ui)
                             }
-                            
                         });
                     }
 
@@ -133,7 +150,7 @@ impl eframe::App for Server {
                     }
 
                     //Debug panel
-                    #[cfg(debug_assertions)] 
+                    #[cfg(debug_assertions)]
                     {
                         ui.label("DEBUG PANEL");
                         if ui.button("Serialize shared_folders").clicked() {
@@ -143,9 +160,44 @@ impl eframe::App for Server {
                 });
         });
 
-        
+        egui::TopBottomPanel::bottom("server_manager").show(ctx, |ui| {
+            ui.horizontal_centered(|ui| {
+                ui.menu_button("Server", |ui| {
+                    ui.label("Start file-hosting service");
+                    if ui
+                        .add_enabled(self.server.is_none(), |ui: &mut egui::Ui| {
+                            ui.button("Start")
+                        })
+                        .clicked()
+                    {
+                        //Spawn channels
+                        let (sx, rx) = mpsc::channel::<()>(1);
 
+                        //Sender clone
+                        self.sx = sx;
 
+                        //Server
+                        self.server = Some(tokio::spawn(async {
+                            crate::ui::backend::server::server_spawner("".to_string(), 3004, rx)
+                                .await
+                                .unwrap();
+                        }));
+                    };
+
+                    if ui
+                        .add_enabled(self.server.is_some(), |ui: &mut egui::Ui| ui.button("Stop"))
+                        .clicked()
+                    {
+                        let sx = self.sx.clone();
+                        tokio::spawn(async move {
+                            sx.send(()).await.expect("msg");
+                        });
+
+                        self.server = None;
+                    }
+                });
+            });
+        });
     }
 }
 
@@ -163,41 +215,51 @@ fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) {
                 ui.horizontal(|ui| {
                     //dir button
                     ui.allocate_ui(vec2(30., 30.), |ui| {
-                        if ui.add(egui::widgets::ImageButton::new(
-                            egui::include_image!(
+                        if ui
+                            .add(egui::widgets::ImageButton::new(egui::include_image!(
                                 "../../../../assets/folder_small.png"
-                            ),
-                        )).clicked() {
+                            )))
+                            .clicked()
+                        {
                             folder.opened = !folder.opened;
                         }
                     });
 
                     //Display name
-                    ui.label(format!("{}", folder.path.file_stem().unwrap().to_string_lossy().to_string()));
+                    ui.label(format!(
+                        "{}",
+                        folder
+                            .path
+                            .file_stem()
+                            .unwrap()
+                            .to_string_lossy()
+                            .to_string()
+                    ));
                 });
 
                 if folder.opened {
                     //Indent
-                    ui.group( |ui| {
+                    ui.group(|ui| {
                         render_path(&mut folder.entries, ui);
                     });
                 }
-            },
+            }
             PathItem::File(file) => {
                 ui.horizontal(|ui| {
                     //file button
                     ui.allocate_ui(vec2(30., 30.), |ui| {
-                        ui.add(egui::widgets::ImageButton::new(
-                            egui::include_image!(
-                                "../../../../assets/file_small.png"
-                            ),
-                        ))
+                        ui.add(egui::widgets::ImageButton::new(egui::include_image!(
+                            "../../../../assets/file_small.png"
+                        )))
                     });
 
                     //Display name
-                    ui.label(format!("{}", file.file_stem().unwrap().to_string_lossy().to_string()));
+                    ui.label(format!(
+                        "{}",
+                        file.file_stem().unwrap().to_string_lossy().to_string()
+                    ));
                 });
-            },
+            }
         }
     }
 }
