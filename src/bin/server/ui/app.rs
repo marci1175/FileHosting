@@ -37,7 +37,6 @@ impl FolderItem {
 #[serde(default)]
 pub struct Server {
     shared_folders: Vec<PathItem>,
-
 }
 
 impl Default for Server {
@@ -90,8 +89,11 @@ impl eframe::App for Server {
             egui::ScrollArea::both()
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
+                    //Kind of cheat the rust compiler
+                    let mut should_remove: Option<usize> = None;
+
                     //iter over all added folders
-                    for (index, group) in self.shared_folders.clone().iter().enumerate() {
+                    for (index, group) in self.shared_folders.iter_mut().enumerate() {
                         ui.group(|ui| {
                             //Folder name and delete button
                             ui.horizontal(|ui| {
@@ -99,10 +101,10 @@ impl eframe::App for Server {
                                 ui.label(
                                     RichText::from(format!(
                                         "Folder: {}",
-                                        group.get_path().file_stem().unwrap().to_string_lossy()
+                                        group.get_path().file_name().unwrap().to_string_lossy()
                                     ))
                                     .size(20.),
-                                ).on_hover_text(format!("Full path: {:?}", group));
+                                ).on_hover_text(format!("Full path: {:?}", group.get_path()));
 
                                 //and delete button
                                 ui.allocate_ui(vec2(20., 20.), |ui| {
@@ -112,18 +114,38 @@ impl eframe::App for Server {
                                         )))
                                         .clicked()
                                     {
-                                        self.shared_folders.remove(index);
+                                        should_remove = Some(index);
                                     }
                                 });
                             });
 
                             
-
-                            render_path(&mut self.shared_folders, ui)
+                            if let PathItem::Folder(folder) = group {
+                                render_path(&mut folder.entries, ui)
+                            }
+                            
                         });
+                    }
+
+                    //Check if we need any deletion
+                    if let Some(remove_index) = should_remove {
+                        self.shared_folders.remove(remove_index);
+                    }
+
+                    //Debug panel
+                    #[cfg(debug_assertions)] 
+                    {
+                        ui.label("DEBUG PANEL");
+                        if ui.button("Serialize shared_folders").clicked() {
+                            dbg!(self.shared_folders.clone());
+                        }
                     }
                 });
         });
+
+        
+
+
     }
 }
 

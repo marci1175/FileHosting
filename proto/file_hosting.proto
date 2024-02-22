@@ -2,18 +2,30 @@ syntax = "proto3";
 
 package file_hosting;
 
-// The greeting service definition.
-service Greeter {
-  // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
+service Serving {
+  rpc ProvideFile (FileRequest) returns (FileReply) {}
 }
 
-// The request message containing the user's name.
-message HelloRequest {
-  string name = 1;
+//Path were asking for
+message FileRequest {
+  string path = 1;
 }
 
-// The response message containing the greetings
-message HelloReply {
-  string message = 1;
+//Bytes of the file weve been asked for
+message FileReply {
+  bytes file = 1;
+}
+ 
+service Communication {
+  rpc Providelist (Ping) returns (FileList) {}
+}
+
+//Serialized Vec<PathItem>
+message FileList {
+  string list = 1;
+}
+
+//Literally an empty packet just to show that we are here
+message Ping {
+
 }
