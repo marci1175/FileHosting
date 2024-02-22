@@ -3,9 +3,9 @@
 
 use eframe::NativeOptions;
 
-mod lib;
+mod ui;
 
-use lib::Server;
+use ui::Server;
 
 pub mod file_hosting {
     tonic::include_proto!("file_hosting");
