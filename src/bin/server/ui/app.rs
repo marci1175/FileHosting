@@ -42,7 +42,7 @@ pub struct Server {
     //Server doe not persist
     #[serde(skip)]
     server: Option<JoinHandle<()>>,
-    
+
     server_password: String,
     server_port: i64,
 
@@ -60,7 +60,7 @@ impl Default for Server {
         Self {
             shared_folders: Vec::new(),
             server: None,
-            
+
             server_password: String::new(),
             server_port: 0,
 
@@ -91,7 +91,6 @@ impl eframe::App for Server {
 
         egui::TopBottomPanel::top("settings").show(ctx, |ui| {
             ui.horizontal(|ui| {
-
                 //Display hint
                 if self.shared_folders.is_empty() {
                     ui.label("Add a folder to the shared folders");
@@ -100,7 +99,7 @@ impl eframe::App for Server {
                 }
 
                 //Add folder
-                ui.add_enabled_ui(self.server.is_none(), |ui|{
+                ui.add_enabled_ui(self.server.is_none(), |ui| {
                     if ui.button("Add folder").clicked() {
                         //Add folder
                         if let Some(added_folders) = rfd::FileDialog::new().pick_folders() {
@@ -110,21 +109,21 @@ impl eframe::App for Server {
                             }
                         };
                     }
-                }).response.on_hover_text(
+                })
+                .response
+                .on_hover_text(
                     //Display warning message
                     if self.server.is_some() {
                         "You cannot add folders while the server is running"
-                    }
-                    else {
+                    } else {
                         ""
-                    }
+                    },
                 );
 
                 //Display status
                 if self.server.is_none() {
                     ui.label(RichText::from("Offline").color(Color32::RED));
-                }
-                else {
+                } else {
                     ui.label(RichText::from("Online").color(Color32::GREEN));
                 }
             });
@@ -194,16 +193,23 @@ impl eframe::App for Server {
 
                     ui.add_enabled_ui(self.server.is_none(), |ui| {
                         ui.label("Password");
-                        ui.add(egui::widgets::TextEdit::singleline(&mut self.server_password));
+                        ui.add(egui::widgets::TextEdit::singleline(
+                            &mut self.server_password,
+                        ));
 
                         ui.label("Port (double click to edit)");
-                        ui.add(egui::widgets::DragValue::new(&mut self.server_port).clamp_range(0..=65535));
+                        ui.add(
+                            egui::widgets::DragValue::new(&mut self.server_port)
+                                .clamp_range(0..=65535),
+                        );
                     });
 
                     ui.separator();
 
                     if ui
-                        .add_enabled(self.server.is_none(), |ui: &mut egui::Ui| ui.button("Start"))
+                        .add_enabled(self.server.is_none(), |ui: &mut egui::Ui| {
+                            ui.button("Start")
+                        })
                         .clicked()
                     {
                         //Spawn channels
@@ -215,7 +221,7 @@ impl eframe::App for Server {
                         //force ownership
                         let password = self.server_password.clone();
                         let port = self.server_port.clone();
-                        let folder  = self.shared_folders.clone();
+                        let folder = self.shared_folders.clone();
                         //Server
                         self.server = Some(tokio::spawn(async move {
                             crate::ui::backend::server::server_spawner(password, port, rx, folder)
