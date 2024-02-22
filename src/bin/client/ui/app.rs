@@ -29,5 +29,7 @@ impl eframe::App for Client {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {}
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        
+    }
 }

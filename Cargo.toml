@@ -28,6 +28,7 @@ eframe = { version = "0.26.2", default-features = false, features = [
 egui-video = "0.6.0"
 anyhow = "1.0.80"
 rfd = "0.13.0"
+serde_json = "1.0.114"
 
 [build-dependencies]
 tonic-build = "0.7"

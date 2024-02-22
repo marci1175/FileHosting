@@ -15,6 +15,7 @@ dependencies = [
  "prost",
  "rfd",
  "serde",
+ "serde_json",
  "tokio",
  "tonic",
  "tonic-build",
@@ -3236,6 +3237,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ryu"
+version = "1.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e86697c916019a8588c99b5fac3cead74ec0b4b819707a682fd4d23fa0ce1ba1"
+
+[[package]]
 name = "same-file"
 version = "1.0.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3308,6 +3315,17 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.50",
+]
+
+[[package]]
+name = "serde_json"
+version = "1.0.114"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c5f09b1bd632ef549eaa9f60a1f8de742bdbc698e6cee2095fc84dde5f549ae0"
+dependencies = [
+ "itoa",
+ "ryu",
+ "serde",
 ]
 
 [[package]]

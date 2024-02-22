@@ -14,7 +14,7 @@ message FileRequest {
 
 //Bytes of the file weve been asked for
 message FileReply {
-  bytes file = 1;
+  string serialized_file = 1;
 }
  
 service Communication {
