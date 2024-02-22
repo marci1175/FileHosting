@@ -25,9 +25,9 @@ eframe = { version = "0.26.2", default-features = false, features = [
     "glow",          # Use the glow rendering backend. Alternative: "wgpu".
     "persistence",   # Enable restoring app state when restarting the app.
 ] }
-winapi = "0.3.9"
 egui-video = "0.6.0"
 anyhow = "1.0.80"
+rfd = "0.13.0"
 
 [build-dependencies]
 tonic-build = "0.7"

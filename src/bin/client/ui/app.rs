@@ -16,7 +16,6 @@ impl Default for Client {
 
 impl Client {
     pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-
         if let Some(storage) = cc.storage {
             return eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default();
         }
@@ -30,7 +29,6 @@ impl eframe::App for Client {
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 
-    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
-        
-    }
+    fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {}
 }
+            
