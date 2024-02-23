@@ -1,16 +1,10 @@
 use self::messages::{
-    communication_server::Communication, serving_server::Serving, serving_server::ServingServer,
-    FileList, FileReply, FileRequest, Ping,
+    serving_server::Serving, serving_server::ServingServer,
 };
-use crate::ui::app::PathItem;
-
-use std::{fs, path::PathBuf, vec};
-use tokio::{
-    net::windows::named_pipe,
-    sync::mpsc::{self, Receiver},
-    task::futures,
-};
-use tonic::{async_trait, service::interceptor, transport::Server, Request, Response, Status};
+use tokio::sync::mpsc::Receiver,
+;
+use tonic::{async_trait, transport::Server, Request, Response, Status};
+use CommonDefinitions::{ClientRequest, PathItem, ServerFile, ServerList, ServerReply};
 
 pub mod messages {
     tonic::include_proto!("file_hosting");
@@ -21,96 +15,50 @@ pub struct FileService {
     file_list: Vec<PathItem>,
 }
 
-#[derive(serde::Serialize)]
-pub struct ServerReply {
-    file: Option<std::vec::Vec<u8>>,
-    error: Option<String>,
-}
-
-impl ServerReply {
-    fn new(path: PathBuf) -> Self {
-        match fs::read(path) {
-            Ok(bytes) => Self {
-                file: Some(bytes),
-                error: None,
-            },
-            Err(err) => Self {
-                file: None,
-                error: Some(err.to_string()),
-            },
-        }
-    }
-
-    fn serialize(&self) -> String {
-        serde_json::to_string(&self).unwrap()
-    }
-}
+use messages::{HostRequest, HostReply};
 
 #[async_trait]
 impl Serving for FileService {
-    async fn provide_file(
+    async fn server_provide(
         &self,
-        request: Request<FileRequest>,
-    ) -> Result<Response<FileReply>, Status> {
+        request: Request<HostRequest>,
+    ) -> Result<Response<HostReply>, Status> {
         let request = request.into_inner();
 
-        let msg_password = request.password;
-        if msg_password == self.password {
-            return Ok(Response::new(FileReply {
-                serialized_file: ServerReply::new(request.path.into()).serialize(),
-            }));
-        } else {
-            return Ok(Response::new(FileReply {
-                serialized_file: ServerReply {
-                    file: None,
-                    error: Some("Invalid password".to_string()),
-                }
-                .serialize(),
-            }));
+        let struct_string = request.serialized_request;
+        let password = request.password;
+
+        if password == self.password {
+            if let Ok(req) = serde_json::from_str::<ClientRequest>(&struct_string) {
+                let request = match req {
+                    ClientRequest::FileRequest(path) => {
+                        ServerReply::File(ServerFile::new(path))
+                    },
+                    ClientRequest::ListRequest => {
+                        ServerReply::List(ServerList::new(self.file_list.clone()))
+                    }
+                };
+
+                return Ok(Response::new(HostReply { serialized_reply: request.serialize() }));
+            }
+            else {
+                let respone = HostReply {
+                    serialized_reply: "Invalid message? CONTACT ADMIN".to_string()
+                };
+    
+                return Ok(Response::new(
+                    respone
+                ));
+            }
         }
-    }
-}
+        else {
+            let respone = HostReply {
+                serialized_reply: "Invalid password!".to_string()
+            };
 
-#[derive(serde::Serialize)]
-pub struct ServerPing {
-    file: Option<String>,
-    error: Option<String>,
-}
-
-impl ServerPing {
-    fn new(file_list: Vec<PathItem>) -> Self {
-        match serde_json::to_string(&file_list) {
-            Ok(vec_string) => Self {
-                file: Some(vec_string),
-                error: None,
-            },
-            Err(err) => Self {
-                file: None,
-                error: Some(err.to_string()),
-            },
-        }
-    }
-
-    fn serialize(&self) -> String {
-        serde_json::to_string(&self).unwrap()
-    }
-}
-
-#[async_trait]
-impl Communication for FileService {
-    async fn provide_list(&self, request: Request<Ping>) -> Result<Response<FileList>, Status> {
-        if self.password == request.into_inner().password {
-            Ok(Response::new(FileList {
-                list: ServerPing::new(self.file_list.clone()).serialize(),
-            }))
-        } else {
-            Ok(Response::new(FileList {
-                list: ServerPing {
-                    file: None,
-                    error: None,
-                }
-                .serialize(),
-            }))
+            return Ok(Response::new(
+                respone
+            ));
         }
     }
 }

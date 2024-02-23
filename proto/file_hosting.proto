@@ -3,24 +3,22 @@ syntax = "proto3";
 package file_hosting;
 
 service Serving {
-  rpc ProvideFile (FileRequest) returns (FileReply) {}
+  rpc server_provide (HostRequest) returns (HostReply) {}
+
+  //rpc ProvideList (Ping) returns (FileList) {}
 }
 
 //Path were asking for
-message FileRequest {
-  string path = 1;
+message HostRequest {
+  string serialized_request = 1;
   string password = 2;
 }
 
 //Bytes of the file weve been asked for
-message FileReply {
-  string serialized_file = 1;
+message HostReply {
+  string serialized_reply = 1;
 }
  
-service Communication {
-  rpc ProvideList (Ping) returns (FileList) {}
-}
-
 //Serialized Vec<PathItem>
 message FileList {
   string list = 1;

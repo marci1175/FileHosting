@@ -1,38 +1,8 @@
 use egui::{vec2, Color32, Response, RichText};
 use std::{fs, path::PathBuf, sync::Arc};
 use tokio::{sync::mpsc, task::JoinHandle};
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
-pub enum PathItem {
-    Folder(FolderItem),
-    File(PathBuf),
-}
-
-impl PathItem {
-    fn get_path(&self) -> PathBuf {
-        return match self {
-            PathItem::Folder(folder) => folder.path.clone(),
-            PathItem::File(file) => file.clone(),
-        };
-    }
-}
-
-#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
-struct FolderItem {
-    path: PathBuf,
-    opened: bool,
-    entries: Vec<PathItem>,
-}
-
-impl FolderItem {
-    fn new(path: PathBuf) -> Self {
-        Self {
-            path: path.clone(),
-            opened: false,
-            entries: iter_folder(&path),
-        }
-    }
-}
+use CommonDefinitions::{iter_folder, render_path};
+use CommonDefinitions::{FolderItem, PathItem};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
@@ -119,13 +89,6 @@ impl eframe::App for Server {
                         "Add folder to share"
                     },
                 );
-
-                //Display status
-                if self.server.is_none() {
-                    ui.label(RichText::from("Offline").color(Color32::RED));
-                } else {
-                    ui.label(RichText::from("Online").color(Color32::GREEN));
-                }
             });
         });
 
@@ -156,9 +119,11 @@ impl eframe::App for Server {
                                     //and delete button
                                     ui.allocate_ui(vec2(20., 20.), |ui| {
                                         if ui
-                                            .add(egui::widgets::ImageButton::new(egui::include_image!(
-                                                "../../../../assets/cross.png"
-                                            )))
+                                            .add(egui::widgets::ImageButton::new(
+                                                egui::include_image!(
+                                                    "../../../../assets/cross.png"
+                                                ),
+                                            ))
                                             .clicked()
                                         {
                                             should_remove = Some(index);
@@ -248,85 +213,13 @@ impl eframe::App for Server {
                         self.server = None;
                     }
                 });
+                //Display status
+                if self.server.is_none() {
+                    ui.label(RichText::from("Offline").color(Color32::RED));
+                } else {
+                    ui.label(RichText::from("Online").color(Color32::GREEN));
+                }
             });
         });
     }
-}
-
-fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) {
-    //check if folder is empty
-    if folder_list.is_empty() {
-        ui.label("Empty");
-        return;
-    }
-
-    //Iter over entries of the directory
-    for entry in folder_list {
-        match entry {
-            PathItem::Folder(folder) => {
-                ui.horizontal(|ui| {
-                    //dir button
-                    ui.allocate_ui(vec2(30., 30.), |ui| {
-                        if ui
-                            .add(egui::widgets::ImageButton::new(egui::include_image!(
-                                "../../../../assets/folder_small.png"
-                            )))
-                            .clicked()
-                        {
-                            folder.opened = !folder.opened;
-                        }
-                    });
-
-                    //Display name
-                    ui.label(format!(
-                        "{}",
-                        folder
-                            .path
-                            .file_stem()
-                            .unwrap()
-                            .to_string_lossy()
-                            .to_string()
-                    ));
-                });
-
-                if folder.opened {
-                    //Indent
-                    ui.group(|ui| {
-                        render_path(&mut folder.entries, ui);
-                    });
-                }
-            }
-            PathItem::File(file) => {
-                ui.horizontal(|ui| {
-                    //file button
-                    ui.allocate_ui(vec2(30., 30.), |ui| {
-                        ui.add(egui::widgets::ImageButton::new(egui::include_image!(
-                            "../../../../assets/file_small.png"
-                        )))
-                    });
-
-                    //Display name
-                    ui.label(format!(
-                        "{}",
-                        file.file_stem().unwrap().to_string_lossy().to_string()
-                    ));
-                });
-            }
-        }
-    }
-}
-
-fn iter_folder(group: &PathBuf) -> Vec<PathItem> {
-    let mut paths: Vec<PathItem> = Vec::new();
-    for dir_entry in fs::read_dir(group).unwrap() {
-        let dir_entry = dir_entry.unwrap();
-        let path = dir_entry.path();
-
-        if path.is_file() {
-            paths.push(PathItem::File(path));
-        } else if path.is_dir() {
-            paths.push(PathItem::Folder(FolderItem::new(path)));
-        }
-    }
-    paths
 }
