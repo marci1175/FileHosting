@@ -133,7 +133,8 @@ impl eframe::App for Server {
                             });
 
                             if let PathItem::Folder(folder) = group {
-                                render_path(&mut folder.entries, ui)
+                                //We can ignore what this returns
+                                render_path(&mut folder.entries, ui);
                             }
                         });
                     }
@@ -141,15 +142,6 @@ impl eframe::App for Server {
                     //Check if we need any deletion
                     if let Some(remove_index) = should_remove {
                         self.shared_folders.remove(remove_index);
-                    }
-
-                    //Debug panel
-                    #[cfg(debug_assertions)]
-                    {
-                        ui.label("DEBUG PANEL");
-                        if ui.button("Serialize shared_folders").clicked() {
-                            dbg!(self.shared_folders.clone());
-                        }
                     }
                 });
         });

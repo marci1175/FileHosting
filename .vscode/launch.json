@@ -7,12 +7,31 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug unit tests in library 'CommonDefinitions'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=CommonDefinitions"
+                ],
+                "filter": {
+                    "name": "CommonDefinitions",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'server'",
             "cargo": {
                 "args": [
                     "build",
                     "--bin=server",
-                    "--package=FileHosting"
+                    "--package=CommonDefinitions"
                 ],
                 "filter": {
                     "name": "server",
@@ -31,7 +50,7 @@
                     "test",
                     "--no-run",
                     "--bin=server",
-                    "--package=FileHosting"
+                    "--package=CommonDefinitions"
                 ],
                 "filter": {
                     "name": "server",
@@ -49,7 +68,7 @@
                 "args": [
                     "build",
                     "--bin=client",
-                    "--package=FileHosting"
+                    "--package=CommonDefinitions"
                 ],
                 "filter": {
                     "name": "client",
@@ -68,7 +87,7 @@
                     "test",
                     "--no-run",
                     "--bin=client",
-                    "--package=FileHosting"
+                    "--package=CommonDefinitions"
                 ],
                 "filter": {
                     "name": "client",

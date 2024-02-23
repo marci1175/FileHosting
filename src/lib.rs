@@ -1,27 +1,30 @@
-use std::{fmt::Debug, fs, path::PathBuf};
 use egui::vec2;
+use std::{fmt::Debug, fs, path::PathBuf};
 
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct ServerFile {
-    pub file: Option<std::vec::Vec<u8>>,
+    pub bytes: Option<std::vec::Vec<u8>>,
+    pub path: PathBuf,
     pub error: Option<String>,
 }
 
 impl Debug for ServerFile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("File: {:?}\nError: {:?}", self.file, self.error))
+        f.write_str(&format!("File: {:?}\nError: {:?}", self.bytes, self.error))
     }
 }
 
 impl ServerFile {
     pub fn new(path: PathBuf) -> Self {
-        match fs::read(path) {
+        match fs::read(path.clone()) {
             Ok(bytes) => Self {
-                file: Some(bytes),
+                bytes: Some(bytes),
+                path: path,
                 error: None,
             },
             Err(err) => Self {
-                file: None,
+                bytes: None,
+                path: path,
                 error: Some(err.to_string()),
             },
         }
@@ -34,28 +37,18 @@ impl ServerFile {
 
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ServerList {
-    pub list: Option<String>,
-    pub error: Option<String>,
+    pub list: Vec<PathItem>,
 }
 
 impl Debug for ServerList {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&format!("List: {:?}\nError: {:?}", self.list, self.error))
+        f.write_str(&format!("List: {:?}", self.list))
     }
 }
 
 impl ServerList {
     pub fn new(file_list: Vec<PathItem>) -> Self {
-        match serde_json::to_string(&file_list) {
-            Ok(vec_string) => Self {
-                list: Some(vec_string),
-                error: None,
-            },
-            Err(err) => Self {
-                list: None,
-                error: Some(err.to_string()),
-            },
-        }
+        Self { list: file_list }
     }
 
     pub fn serialize(&self) -> String {
@@ -87,6 +80,12 @@ pub enum ClientRequest {
     FileRequest(PathBuf),
 }
 
+impl ClientRequest {
+    pub fn serialize(&self) -> String {
+        serde_json::to_string(&self).unwrap()
+    }
+}
+
 impl PathItem {
     pub fn get_path(&self) -> PathBuf {
         return match self {
@@ -113,12 +112,15 @@ impl FolderItem {
     }
 }
 
-pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) {
+//It returns which file button it has been clicked on
+pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option<PathBuf> {
     //check if folder is empty
     if folder_list.is_empty() {
         ui.label("Empty");
-        return;
+        return None;
     }
+
+    let mut clicked_button: Option<PathBuf> = None;
 
     //Iter over entries of the directory
     for entry in folder_list {
@@ -152,7 +154,7 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) {
                 if folder.opened {
                     //Indent
                     ui.group(|ui| {
-                        render_path(&mut folder.entries, ui);
+                        clicked_button = render_path(&mut folder.entries, ui);
                     });
                 }
             }
@@ -160,20 +162,27 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) {
                 ui.horizontal(|ui| {
                     //file button
                     ui.allocate_ui(vec2(30., 30.), |ui| {
-                        ui.add(egui::widgets::ImageButton::new(egui::include_image!(
-                            "../assets/file_small.png"
-                        )))
+                        if ui
+                            .add(egui::widgets::ImageButton::new(egui::include_image!(
+                                "../assets/file_small.png"
+                            )))
+                            .clicked()
+                        {
+                            clicked_button = Some(file.clone());
+                        }
                     });
 
-                    //Display name
                     ui.label(format!(
                         "{}",
-                        file.file_stem().unwrap().to_string_lossy().to_string()
+                        file.file_name().unwrap().to_string_lossy().to_string()
                     ));
+                    
                 });
             }
         }
     }
+
+    clicked_button
 }
 
 pub fn iter_folder(group: &PathBuf) -> Vec<PathItem> {
