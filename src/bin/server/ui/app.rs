@@ -116,7 +116,7 @@ impl eframe::App for Server {
                     if self.server.is_some() {
                         "You cannot add folders while the server is running"
                     } else {
-                        ""
+                        "Add folder to share"
                     },
                 );
 
@@ -151,16 +151,19 @@ impl eframe::App for Server {
                                 )
                                 .on_hover_text(format!("Full path: {:?}", group.get_path()));
 
-                                //and delete button
-                                ui.allocate_ui(vec2(20., 20.), |ui| {
-                                    if ui
-                                        .add(egui::widgets::ImageButton::new(egui::include_image!(
-                                            "../../../../assets/cross.png"
-                                        )))
-                                        .clicked()
-                                    {
-                                        should_remove = Some(index);
-                                    }
+                                //Check if server has started
+                                ui.add_enabled_ui(self.server.is_none(), |ui| {
+                                    //and delete button
+                                    ui.allocate_ui(vec2(20., 20.), |ui| {
+                                        if ui
+                                            .add(egui::widgets::ImageButton::new(egui::include_image!(
+                                                "../../../../assets/cross.png"
+                                            )))
+                                            .clicked()
+                                        {
+                                            should_remove = Some(index);
+                                        }
+                                    });
                                 });
                             });
 
