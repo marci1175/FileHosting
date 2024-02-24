@@ -79,17 +79,19 @@ impl eframe::App for Client {
                 ui.menu_button("Connect", |ui| {
                     ui.allocate_ui(vec2(200., 100.), |ui| {
                         ui.label("Establish connection with host");
-                        ui.label("Address (IpV6)");
-                        ui.text_edit_singleline(&mut self.connecting_to);
+                        ui.add_enabled_ui(self.connection.is_none(), |ui| {
+                            ui.label("Address (IpV6)");
+                            ui.text_edit_singleline(&mut self.connecting_to);
 
-                        ui.label("Port (double click to edit)");
-                        ui.add(
-                            egui::widgets::DragValue::new(&mut self.connecting_port)
-                                .clamp_range(0..=65535),
-                        );
+                            ui.label("Port (double click to edit)");
+                            ui.add(
+                                egui::widgets::DragValue::new(&mut self.connecting_port)
+                                    .clamp_range(0..=65535),
+                            );
 
-                        ui.label("Password");
-                        ui.text_edit_singleline(&mut self.password);
+                            ui.label("Password");
+                            ui.text_edit_singleline(&mut self.password);
+                        });
 
                         ui.separator();
                         
