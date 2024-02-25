@@ -176,7 +176,6 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                         "{}",
                         file.file_name().unwrap().to_string_lossy().to_string()
                     ));
-                    
                 });
             }
         }

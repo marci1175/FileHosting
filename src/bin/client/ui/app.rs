@@ -30,6 +30,9 @@ pub struct Client {
 
     #[serde(skip)]
     shared_folders: Vec<PathItem>,
+
+    #[serde(skip)]
+    invalid_password: bool,
 }
 
 impl Default for Client {
@@ -52,6 +55,8 @@ impl Default for Client {
             this_sx,
 
             shared_folders: Vec::new(),
+
+            invalid_password: false,
         }
     }
 }
@@ -94,10 +99,15 @@ impl eframe::App for Client {
                         });
 
                         ui.separator();
-                        
+
+                        if self.invalid_password {
+                            ui.label(RichText::from("Invalid password!").color(Color32::RED));
+                        }
+
                         ui.add_enabled_ui(self.connection.is_none(), |ui| {
                             if ui.button("Connect").clicked() {
-                                let ip = format!("[{}]:{}", self.connecting_to, self.connecting_port);
+                                let ip =
+                                    format!("[{}]:{}", self.connecting_to, self.connecting_port);
                                 let password = self.password.clone();
 
                                 //The info is passed TO the MAIN from the connection
@@ -125,10 +135,11 @@ impl eframe::App for Client {
 
                                 //Stop the connection thread gracefully
                                 tokio::spawn(async move {
-                                    this_sx.send(None).await.unwrap();
+                                    this_sx.send(None).await;
                                 });
 
                                 //reset state
+                                self.shared_folders.clear();
                                 self.connection = None;
                             };
                         });
@@ -187,14 +198,15 @@ impl eframe::App for Client {
 
         match self.main_rx.try_recv() {
             Ok(struct_str) => {
-                if struct_str == "Invalid Password!" {
-                    let ctx = ctx.clone();
-                    std::thread::spawn(move || {
-                        println!("NEW THREAD");
-                        egui::Window::new("Error").show(&ctx, |ui| {
-                            ui.label("Nigga");
-                        });
+                if struct_str == "Invalid password!" {
+                    let sx = self.this_sx.clone();
+
+                    //Destroy local connection
+                    tokio::spawn(async move {
+                        sx.send(None).await;
                     });
+
+                    self.invalid_password = true;
 
                     self.connection = None;
                 } else {
@@ -204,9 +216,11 @@ impl eframe::App for Client {
                         Ok(ok) => {
                             match ok {
                                 ServerReply::List(list) => {
+                                    self.invalid_password = false;
                                     self.shared_folders = list.list;
                                 }
                                 ServerReply::File(file) => {
+                                    self.invalid_password = false;
                                     if let Some(err) = file.error {
                                         dbg!(err);
                                     } else if let Some(file_bytes) = file.bytes {
@@ -214,7 +228,15 @@ impl eframe::App for Client {
                                         let files = rfd::FileDialog::new()
                                             .set_title("Save to")
                                             .set_directory("/")
-                                            .add_filter("File extension", &[file.path.extension().unwrap_or(file.path.file_stem().unwrap()).to_os_string().to_string_lossy()])
+                                            .add_filter(
+                                                "File extension",
+                                                &[file
+                                                    .path
+                                                    .extension()
+                                                    .unwrap_or(file.path.file_stem().unwrap())
+                                                    .to_os_string()
+                                                    .to_string_lossy()],
+                                            )
                                             .save_file();
 
                                         if let Some(file_path) = files {
