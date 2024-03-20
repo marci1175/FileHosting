@@ -1,5 +1,3 @@
-use std::ffi::OsStr;
-
 use egui::{vec2, Color32, RichText};
 use tokio::sync::mpsc;
 use CommonDefinitions::{render_path, ClientRequest, PathItem, ServerReply};
@@ -123,7 +121,8 @@ impl eframe::App for Client {
                                     match client::connect(ip, password, main_sx, this_rx).await {
                                         Ok(_) => {}
                                         Err(err) => {
-                                            println!("{err}");
+                                            dbg!(err.downcast::<String>());
+                                            // println!("{err}");
                                         }
                                     };
                                 });
@@ -135,7 +134,7 @@ impl eframe::App for Client {
 
                                 //Stop the connection thread gracefully
                                 tokio::spawn(async move {
-                                    this_sx.send(None).await;
+                                    dbg!(this_sx.send(None).await);
                                 });
 
                                 //reset state

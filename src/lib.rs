@@ -1,6 +1,7 @@
 use egui::vec2;
-use std::{fmt::Debug, fs, path::PathBuf};
+use std::{fmt::Debug, fs::{self, Metadata}, path::PathBuf};
 
+///Master packet, when asking for the file
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
 pub struct ServerFile {
     pub bytes: Option<std::vec::Vec<u8>>,
@@ -35,6 +36,7 @@ impl ServerFile {
     }
 }
 
+///Master packet, when asking for the file tree
 #[derive(serde::Serialize, serde::Deserialize)]
 pub struct ServerList {
     pub list: Vec<PathItem>,
@@ -56,6 +58,7 @@ impl ServerList {
     }
 }
 
+///This is what the server replies with
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub enum ServerReply {
     List(ServerList),
@@ -68,15 +71,27 @@ impl ServerReply {
     }
 }
 
+///Used for tree structure of the sent files
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub enum PathItem {
     Folder(FolderItem),
-    File(PathBuf),
+    #[serde(skip)]
+    File(FileStruct),
 }
 
+///This struct contains the data which is being sent to the client containing the path and the mtadata
+#[derive(Clone, Debug)]
+pub struct FileStruct {
+    path: PathBuf,
+    metadata: fs::Metadata,
+}
+
+///This is what the server gets when the client is asking something (MASTER PACKET)
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub enum ClientRequest {
+    ///Client asked for a list
     ListRequest,
+    ///Client asked for a file
     FileRequest(PathBuf),
 }
 
@@ -90,15 +105,19 @@ impl PathItem {
     pub fn get_path(&self) -> PathBuf {
         return match self {
             PathItem::Folder(folder) => folder.path.clone(),
-            PathItem::File(file) => file.clone(),
+            PathItem::File(file) => file.clone().path,
         };
     }
 }
 
+///Used in the ui, to make the file tree visualization
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct FolderItem {
+    ///Path to the folder (wtf who put this in here)
     pub path: PathBuf,
+    ///Should the tree branch be opened
     pub opened: bool,
+    ///The folder's entries
     pub entries: Vec<PathItem>,
 }
 
@@ -168,13 +187,13 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                             )))
                             .clicked()
                         {
-                            clicked_button = Some(file.clone());
+                            clicked_button = Some(file.clone().path);
                         }
                     });
 
                     ui.label(format!(
                         "{}",
-                        file.file_name().unwrap().to_string_lossy().to_string()
+                        file.path.file_name().unwrap().to_string_lossy().to_string()
                     ));
                 });
             }
@@ -191,7 +210,14 @@ pub fn iter_folder(group: &PathBuf) -> Vec<PathItem> {
         let path = dir_entry.path();
 
         if path.is_file() {
-            paths.push(PathItem::File(path));
+            paths.push(PathItem::File(FileStruct { path: path.clone(), metadata: {
+                match fs::metadata(path){
+                    Ok(metadata) => metadata,
+                    Err(_) => fs::metadata(PathBuf::new()).unwrap(),
+                }
+
+                
+            } }));
         } else if path.is_dir() {
             paths.push(PathItem::Folder(FolderItem::new(path)));
         }
