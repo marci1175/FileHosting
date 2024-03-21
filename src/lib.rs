@@ -219,7 +219,11 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                     if let Some(metadata) = &file.metadata {
                         ui.label(format!("File size: {} KB", metadata.file_size / 1024_u64));
 
-                        ui.label(format!("Last accessed: {:?}", metadata.file_accessed));
+
+                        if let Ok(ok) = metadata.file_accessed.elapsed() {
+                            ui.label(format!("Last accessed: {:.2} hours ago", ok.as_secs_f64().round() / 60_f64.powf(2.)));
+                        }
+
                     }
                 });
             }
