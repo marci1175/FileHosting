@@ -1,5 +1,9 @@
 use egui::vec2;
-use std::{fmt::Debug, fs::{self, Metadata}, path::PathBuf};
+use std::{
+    fmt::Debug,
+    fs::{self, Metadata},
+    path::PathBuf,
+};
 
 ///Master packet, when asking for the file
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -75,15 +79,13 @@ impl ServerReply {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub enum PathItem {
     Folder(FolderItem),
-    #[serde(skip)]
     File(FileStruct),
 }
 
 ///This struct contains the data which is being sent to the client containing the path and the mtadata
-#[derive(Clone, Debug)]
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct FileStruct {
     path: PathBuf,
-    metadata: fs::Metadata,
 }
 
 ///This is what the server gets when the client is asking something (MASTER PACKET)
@@ -210,14 +212,9 @@ pub fn iter_folder(group: &PathBuf) -> Vec<PathItem> {
         let path = dir_entry.path();
 
         if path.is_file() {
-            paths.push(PathItem::File(FileStruct { path: path.clone(), metadata: {
-                match fs::metadata(path){
-                    Ok(metadata) => metadata,
-                    Err(_) => fs::metadata(PathBuf::new()).unwrap(),
-                }
-
-                
-            } }));
+            paths.push(PathItem::File(FileStruct {
+                path: path.clone(),
+            }));
         } else if path.is_dir() {
             paths.push(PathItem::Folder(FolderItem::new(path)));
         }
