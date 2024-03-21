@@ -217,7 +217,7 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
 
                     //Display metadata
                     if let Some(metadata) = &file.metadata {
-                        ui.label(format!("File size: {} MB", metadata.file_size * 1024_u64.pow(2)));
+                        ui.label(format!("File size: {} KB", metadata.file_size / 1024_u64));
 
                         ui.label(format!("Last accessed: {:?}", metadata.file_accessed));
                     }
