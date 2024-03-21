@@ -1,8 +1,6 @@
 use egui::vec2;
 use std::{
-    fmt::Debug,
-    fs::{self, Metadata},
-    path::PathBuf,
+    fmt::Debug, fs::{self, FileType, Metadata}, path::PathBuf, time::SystemTime
 };
 
 ///Master packet, when asking for the file
@@ -86,6 +84,22 @@ pub enum PathItem {
 #[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
 pub struct FileStruct {
     path: PathBuf,
+    metadata: Option<FileMetadata>,
+}
+
+///This is a newtype for fs::Metadata, which allows us to serialize and deserialize
+#[derive(serde::Deserialize, serde::Serialize, Clone, Debug)]
+pub struct FileMetadata {
+    file_size: u64,
+    file_modified: SystemTime,
+    file_accessed: SystemTime,
+    file_created: SystemTime,
+}
+
+impl FileMetadata {
+    pub fn from_fs_metadata(metadata: fs::Metadata) -> anyhow::Result<Self> {
+        Ok(Self { file_size: metadata.len(), file_modified: metadata.modified()?, file_accessed: metadata.accessed()?, file_created: metadata.created()?})
+    }
 }
 
 ///This is what the server gets when the client is asking something (MASTER PACKET)
@@ -197,6 +211,16 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                         "{}",
                         file.path.file_name().unwrap().to_string_lossy().to_string()
                     ));
+
+                    //Separator
+                    ui.separator();
+
+                    //Display metadata
+                    if let Some(metadata) = &file.metadata {
+                        ui.label(format!("File size: {} MB", metadata.file_size * 1024_u64.pow(2)));
+
+                        ui.label(format!("Last accessed: {:?}", metadata.file_accessed));
+                    }
                 });
             }
         }
@@ -214,6 +238,12 @@ pub fn iter_folder(group: &PathBuf) -> Vec<PathItem> {
         if path.is_file() {
             paths.push(PathItem::File(FileStruct {
                 path: path.clone(),
+                metadata: {
+                    match fs::metadata(path) {
+                        Ok(metadata) => dbg!(FileMetadata::from_fs_metadata(metadata)).ok(),
+                        Err(_) => None,
+                    }
+                },
             }));
         } else if path.is_dir() {
             paths.push(PathItem::Folder(FolderItem::new(path)));
