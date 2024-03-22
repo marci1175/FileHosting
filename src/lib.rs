@@ -1,6 +1,8 @@
 use egui::vec2;
+use humantime::{format_duration, FormattedDuration};
+use tokio::time;
 use std::{
-    fmt::Debug, fs::{self, FileType, Metadata}, path::PathBuf, time::SystemTime
+    fmt::Debug, fs::{self, FileType, Metadata}, path::PathBuf, time::{Duration, SystemTime}
 };
 
 ///Master packet, when asking for the file
@@ -147,6 +149,10 @@ impl FolderItem {
     }
 }
 
+fn fetch_time_from_secs(secs: u64) -> Duration {
+    std::time::SystemTime::now().duration_since(SystemTime::UNIX_EPOCH.checked_add(Duration::from_secs(secs)).unwrap()).unwrap()
+}
+
 //It returns which file button it has been clicked on
 pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option<PathBuf> {
     //check if folder is empty
@@ -220,8 +226,8 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                         ui.label(format!("File size: {} KB", metadata.file_size / 1024_u64));
 
 
-                        if let Ok(ok) = metadata.file_accessed.elapsed() {
-                            ui.label(format!("Last accessed: {:.2} hours ago", ok.as_secs_f64().round() / 60_f64.powf(2.)));
+                        if let Ok(dur) = metadata.file_accessed.elapsed() {
+                            ui.label(format!("{}", humantime::format_rfc3339_seconds(SystemTime::now().checked_sub(dur).unwrap())));
                         }
 
                     }
@@ -244,7 +250,7 @@ pub fn iter_folder(group: &PathBuf) -> Vec<PathItem> {
                 path: path.clone(),
                 metadata: {
                     match fs::metadata(path) {
-                        Ok(metadata) => dbg!(FileMetadata::from_fs_metadata(metadata)).ok(),
+                        Ok(metadata) => FileMetadata::from_fs_metadata(metadata).ok(),
                         Err(_) => None,
                     }
                 },
