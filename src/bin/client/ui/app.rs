@@ -13,16 +13,13 @@ pub struct Client {
     connecting_port: i64,
     /// The password
     password: String,
-
     //this_sx gets moved to connection, and you can send instruction to the connection thread byy this channel
     #[serde(skip)]
     connection: Option<mpsc::Sender<Option<ClientRequest>>>,
-
     #[serde(skip)]
     main_rx: mpsc::Receiver<String>,
     #[serde(skip)]
     main_sx: mpsc::Sender<String>,
-
     #[serde(skip)]
     this_rx: mpsc::Receiver<Option<ClientRequest>>,
     #[serde(skip)]
@@ -30,7 +27,6 @@ pub struct Client {
 
     #[serde(skip)]
     shared_folders: Vec<PathItem>,
-
     #[serde(skip)]
     invalid_password: bool,
 }
@@ -39,7 +35,6 @@ impl Default for Client {
     fn default() -> Self {
         //this sx is used to send info the the connection thread
         let (this_sx, this_rx) = mpsc::channel(100);
-
         //Main rx is used to recive data to main, sx is passed to connection thread
         let (main_sx, main_rx) = mpsc::channel(100);
         Self {
