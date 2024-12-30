@@ -85,9 +85,11 @@ impl eframe::App for Server {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
+            
             egui::ScrollArea::both()
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
+
                     //Kind of cheat the rust compiler
                     let mut should_remove: Option<usize> = None;
 
