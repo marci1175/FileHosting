@@ -15,6 +15,7 @@ pub mod file_hosting {
 #[tokio::main]
 async fn main() -> anyhow::Result<(), Box<dyn std::error::Error>> {
     eframe::run_native(
+        //Set title
         "File Hosting Client",
         NativeOptions {
             ..Default::default()
