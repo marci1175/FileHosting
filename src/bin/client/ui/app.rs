@@ -42,15 +42,11 @@ impl Default for Client {
             password: String::new(),
             connecting_port: 0,
             connection: None,
-
             main_rx,
             main_sx,
-
             this_rx,
             this_sx,
-
             shared_folders: Vec::new(),
-
             invalid_password: false,
         }
     }

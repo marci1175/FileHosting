@@ -2,9 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")] // hide console window on Windows in release
 
 use eframe::NativeOptions;
-
 mod ui;
-
 use ui::Client;
 
 /// Include proto
