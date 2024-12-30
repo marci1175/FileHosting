@@ -7,6 +7,7 @@ use crate::ui::backend::client;
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct Client {
+    /// The ip address we are connecting to
     connecting_to: String,
     connecting_port: i64,
 
