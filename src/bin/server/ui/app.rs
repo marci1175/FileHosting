@@ -105,7 +105,6 @@ impl eframe::App for Server {
                                     .size(20.),
                                 )
                                 .on_hover_text(format!("Full path: {:?}", group.get_path()));
-
                                 //Check if server has started
                                 ui.add_enabled_ui(self.server.is_none(), |ui| {
                                     //and delete button
@@ -123,7 +122,6 @@ impl eframe::App for Server {
                                     });
                                 });
                             });
-
                             if let PathItem::Folder(folder) = group {
                                 //We can ignore what this returns
                                 render_path(&mut folder.entries, ui);
@@ -145,11 +143,12 @@ impl eframe::App for Server {
 
                     ui.add_enabled_ui(self.server.is_none(), |ui| {
                         ui.label("Password");
+                        
                         ui.add(egui::widgets::TextEdit::singleline(
                             &mut self.server_password,
                         ));
-
                         ui.label("Port (double click to edit)");
+                        
                         ui.add(
                             egui::widgets::DragValue::new(&mut self.server_port)
                                 .clamp_range(0..=65535),
@@ -197,11 +196,16 @@ impl eframe::App for Server {
                         self.server = None;
                     }
                 });
+
                 //Display status
                 if self.server.is_none() {
+
                     ui.label(RichText::from("Offline").color(Color32::RED));
+
                 } else {
+
                     ui.label(RichText::from("Online").color(Color32::GREEN));
+
                 }
             });
         });
