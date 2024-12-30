@@ -11,7 +11,7 @@ pub struct Client {
     connecting_to: String,
     /// The port we are connecting to
     connecting_port: i64,
-
+    /// The password
     password: String,
 
     //this_sx gets moved to connection, and you can send instruction to the connection thread byy this channel
