@@ -52,13 +52,19 @@ impl eframe::App for Server {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //Image loading
         egui_extras::install_image_loaders(ctx);
+
         egui::TopBottomPanel::top("settings").show(ctx, |ui| {
+
             ui.horizontal(|ui| {
                 //Display hint
                 if self.shared_folders.is_empty() {
+                    
                     ui.label("Add a folder to the shared folders");
+
                 } else {
+
                     ui.label(format!("Added folders: {}", self.shared_folders.len()));
+
                 }
                 //Add folder
                 ui.add_enabled_ui(self.server.is_none(), |ui| {
@@ -85,7 +91,7 @@ impl eframe::App for Server {
         });
 
         egui::CentralPanel::default().show(ctx, |ui| {
-            
+
             egui::ScrollArea::both()
                 .auto_shrink([false, false])
                 .show(ui, |ui| {
