@@ -7,6 +7,7 @@ mod ui;
 
 use ui::Client;
 
+/// Include proto
 pub mod file_hosting {
     tonic::include_proto!("file_hosting");
 }
