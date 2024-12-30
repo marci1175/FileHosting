@@ -138,12 +138,14 @@ impl eframe::App for Server {
 
         egui::TopBottomPanel::bottom("server_manager").show(ctx, |ui| {
             ui.horizontal_centered(|ui| {
+                
                 ui.menu_button("Server", |ui| {
+
                     ui.label("Start file-hosting service");
 
                     ui.add_enabled_ui(self.server.is_none(), |ui| {
                         ui.label("Password");
-                        
+
                         ui.add(egui::widgets::TextEdit::singleline(
                             &mut self.server_password,
                         ));
