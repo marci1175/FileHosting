@@ -17,6 +17,7 @@ async fn main() -> anyhow::Result<(), Box<dyn std::error::Error>> {
     eframe::run_native(
         //Set title
         "File Hosting Client",
+        // Get native options
         NativeOptions {
             ..Default::default()
         },
