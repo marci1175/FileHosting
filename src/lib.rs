@@ -1,9 +1,12 @@
 use egui::vec2;
 use humantime::{format_duration, FormattedDuration};
-use tokio::time;
 use std::{
-    fmt::Debug, fs::{self, FileType, Metadata}, path::PathBuf, time::{Duration, SystemTime}
+    fmt::Debug,
+    fs::{self, FileType, Metadata},
+    path::PathBuf,
+    time::{Duration, SystemTime},
 };
+use tokio::time;
 
 ///Master packet, when asking for the file
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -100,7 +103,12 @@ pub struct FileMetadata {
 
 impl FileMetadata {
     pub fn from_fs_metadata(metadata: fs::Metadata) -> anyhow::Result<Self> {
-        Ok(Self { file_size: metadata.len(), file_modified: metadata.modified()?, file_accessed: metadata.accessed()?, file_created: metadata.created()?})
+        Ok(Self {
+            file_size: metadata.len(),
+            file_modified: metadata.modified()?,
+            file_accessed: metadata.accessed()?,
+            file_created: metadata.created()?,
+        })
     }
 }
 
@@ -150,7 +158,13 @@ impl FolderItem {
 }
 
 fn fetch_time_from_secs(secs: u64) -> Duration {
-    std::time::SystemTime::now().duration_since(SystemTime::UNIX_EPOCH.checked_add(Duration::from_secs(secs)).unwrap()).unwrap()
+    std::time::SystemTime::now()
+        .duration_since(
+            SystemTime::UNIX_EPOCH
+                .checked_add(Duration::from_secs(secs))
+                .unwrap(),
+        )
+        .unwrap()
 }
 
 //It returns which file button it has been clicked on
@@ -225,11 +239,14 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                     if let Some(metadata) = &file.metadata {
                         ui.label(format!("File size: {} KB", metadata.file_size / 1024_u64));
 
-
                         if let Ok(dur) = metadata.file_accessed.elapsed() {
-                            ui.label(format!("{}", humantime::format_rfc3339_seconds(SystemTime::now().checked_sub(dur).unwrap())));
+                            ui.label(format!(
+                                "{}",
+                                humantime::format_rfc3339_seconds(
+                                    SystemTime::now().checked_sub(dur).unwrap()
+                                )
+                            ));
                         }
-
                     }
                 });
             }
