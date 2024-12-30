@@ -2,7 +2,6 @@ use egui::{vec2, Color32, RichText};
 use tokio::{sync::mpsc, task::JoinHandle};
 use common_definitions::render_path;
 use common_definitions::{FolderItem, PathItem};
-
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]
 pub struct Server {
@@ -22,7 +21,6 @@ impl Default for Server {
     fn default() -> Self {
         //Default channel, this is not going to be used
         let (sx, rx) = mpsc::channel::<()>(1);
-
         Self {
             shared_folders: Vec::new(),
             server: None,
@@ -69,7 +67,7 @@ impl eframe::App for Server {
                 
                 //Add folder
                 ui.add_enabled_ui(self.server.is_none(), |ui| {
-                    
+
                     if ui.button("Add folder").clicked() {
 
                         //Add folder
