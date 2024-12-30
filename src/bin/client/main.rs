@@ -20,6 +20,7 @@ async fn main() -> anyhow::Result<(), Box<dyn std::error::Error>> {
         NativeOptions {
             ..Default::default()
         },
+        //Create window
         Box::new(|cc| Box::new(Client::new(cc))),
     )?;
 
