@@ -26,10 +26,8 @@ impl Default for Server {
         Self {
             shared_folders: Vec::new(),
             server: None,
-
             server_password: String::new(),
             server_port: 0,
-
             rx,
             sx,
         }
@@ -54,7 +52,6 @@ impl eframe::App for Server {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         //Image loading
         egui_extras::install_image_loaders(ctx);
-
         egui::TopBottomPanel::top("settings").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 //Display hint
@@ -63,7 +60,6 @@ impl eframe::App for Server {
                 } else {
                     ui.label(format!("Added folders: {}", self.shared_folders.len()));
                 }
-
                 //Add folder
                 ui.add_enabled_ui(self.server.is_none(), |ui| {
                     if ui.button("Add folder").clicked() {
