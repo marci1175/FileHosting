@@ -9,6 +9,7 @@ use crate::ui::backend::client;
 pub struct Client {
     /// The ip address we are connecting to
     connecting_to: String,
+    /// The port we are connecting to
     connecting_port: i64,
 
     password: String,
