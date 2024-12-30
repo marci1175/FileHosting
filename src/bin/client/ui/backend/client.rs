@@ -9,7 +9,7 @@ pub mod messages {
     tonic::include_proto!("file_hosting");
 }
 
-use CommonDefinitions::ClientRequest;
+use common_definitions::ClientRequest;
 
 //We use the reciver to get what the main thread wants to recive, we use the sender to send back the response from the server
 

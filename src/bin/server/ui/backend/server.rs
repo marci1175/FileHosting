@@ -2,7 +2,7 @@ use self::messages::{serving_server::Serving, serving_server::ServingServer};
 use tokio::sync::mpsc::Receiver;
 
 use tonic::{async_trait, transport::Server, Request, Response, Status};
-use CommonDefinitions::{ClientRequest, PathItem, ServerFile, ServerList, ServerReply};
+use common_definitions::{ClientRequest, PathItem, ServerFile, ServerList, ServerReply};
 
 pub mod messages {
     tonic::include_proto!("file_hosting");

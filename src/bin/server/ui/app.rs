@@ -1,7 +1,7 @@
 use egui::{vec2, Color32, RichText};
 use tokio::{sync::mpsc, task::JoinHandle};
-use CommonDefinitions::render_path;
-use CommonDefinitions::{FolderItem, PathItem};
+use common_definitions::render_path;
+use common_definitions::{FolderItem, PathItem};
 
 #[derive(serde::Deserialize, serde::Serialize)]
 #[serde(default)]

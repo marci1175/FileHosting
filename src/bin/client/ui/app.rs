@@ -1,6 +1,6 @@
 use egui::{vec2, Color32, RichText};
 use tokio::sync::mpsc;
-use CommonDefinitions::{render_path, ClientRequest, PathItem, ServerReply};
+use common_definitions::{render_path, ClientRequest, PathItem, ServerReply};
 
 use crate::ui::backend::client;
 
