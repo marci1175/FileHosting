@@ -1,12 +1,10 @@
 use egui::vec2;
-use humantime::{format_duration, FormattedDuration};
 use std::{
     fmt::Debug,
-    fs::{self, FileType, Metadata},
+    fs::{self},
     path::PathBuf,
     time::{Duration, SystemTime},
 };
-use tokio::time;
 
 ///Master packet, when asking for the file
 #[derive(serde::Serialize, serde::Deserialize, Clone)]
@@ -27,12 +25,12 @@ impl ServerFile {
         match fs::read(path.clone()) {
             Ok(bytes) => Self {
                 bytes: Some(bytes),
-                path: path,
+                path,
                 error: None,
             },
             Err(err) => Self {
                 bytes: None,
-                path: path,
+                path,
                 error: Some(err.to_string()),
             },
         }
@@ -129,10 +127,10 @@ impl ClientRequest {
 
 impl PathItem {
     pub fn get_path(&self) -> PathBuf {
-        return match self {
+        match self {
             PathItem::Folder(folder) => folder.path.clone(),
             PathItem::File(file) => file.clone().path,
-        };
+        }
     }
 }
 
@@ -202,7 +200,6 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
                             .file_stem()
                             .unwrap()
                             .to_string_lossy()
-                            .to_string()
                     ));
                 });
 
@@ -229,7 +226,7 @@ pub fn render_path(folder_list: &mut Vec<PathItem>, ui: &mut egui::Ui) -> Option
 
                     ui.label(format!(
                         "{}",
-                        file.path.file_name().unwrap().to_string_lossy().to_string()
+                        file.path.file_name().unwrap().to_string_lossy()
                     ));
 
                     //Separator

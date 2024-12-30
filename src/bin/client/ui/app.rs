@@ -197,64 +197,61 @@ impl eframe::App for Client {
                 });
         });
 
-        match self.main_rx.try_recv() {
-            Ok(struct_str) => {
-                if struct_str == "Invalid password!" {
-                    let sx = self.this_sx.clone();
+        if let Ok(struct_str) = self.main_rx.try_recv() {
+            if struct_str == "Invalid password!" {
+                let sx = self.this_sx.clone();
 
-                    //Destroy local connection
-                    tokio::spawn(async move {
-                        sx.send(None).await;
-                    });
+                //Destroy local connection
+                tokio::spawn(async move {
+                    sx.send(None).await;
+                });
 
-                    self.invalid_password = true;
+                self.invalid_password = true;
 
-                    self.connection = None;
-                } else {
-                    self.connection = Some(self.this_sx.clone());
+                self.connection = None;
+            } else {
+                self.connection = Some(self.this_sx.clone());
 
-                    match serde_json::from_str::<ServerReply>(&struct_str) {
-                        Ok(ok) => {
-                            match ok {
-                                ServerReply::List(list) => {
-                                    self.invalid_password = false;
-                                    self.shared_folders = list.list;
-                                }
-                                ServerReply::File(file) => {
-                                    self.invalid_password = false;
-                                    if let Some(err) = file.error {
-                                        dbg!(err);
-                                    } else if let Some(file_bytes) = file.bytes {
-                                        //Handle download
-                                        let files = rfd::FileDialog::new()
-                                            .set_title("Save to")
-                                            .set_directory("/")
-                                            .add_filter(
-                                                "File extension",
-                                                &[file
-                                                    .path
-                                                    .extension()
-                                                    .unwrap_or(file.path.file_stem().unwrap())
-                                                    .to_os_string()
-                                                    .to_string_lossy()],
-                                            )
-                                            .save_file();
+                match serde_json::from_str::<ServerReply>(&struct_str) {
+                    Ok(ok) => {
+                        match ok {
+                            ServerReply::List(list) => {
+                                self.invalid_password = false;
+                                self.shared_folders = list.list;
+                            }
+                            ServerReply::File(file) => {
+                                self.invalid_password = false;
+                                if let Some(err) = file.error {
+                                    dbg!(err);
+                                } else if let Some(file_bytes) = file.bytes {
+                                    //Handle download
+                                    let files = rfd::FileDialog::new()
+                                        .set_title("Save to")
+                                        .set_directory("/")
+                                        .add_filter(
+                                            "File extension",
+                                            &[file
+                                                .path
+                                                .extension()
+                                                .unwrap_or(file.path.file_stem().unwrap())
+                                                .to_os_string()
+                                                .to_string_lossy()],
+                                        )
+                                        .save_file();
 
-                                        if let Some(file_path) = files {
-                                            let _ = std::fs::write(file_path, file_bytes)
-                                                .map_err(|err| dbg!(err));
-                                        }
+                                    if let Some(file_path) = files {
+                                        let _ = std::fs::write(file_path, file_bytes)
+                                            .map_err(|err| dbg!(err));
                                     }
                                 }
                             }
                         }
-                        Err(err) => {
-                            dbg!(err);
-                        }
+                    }
+                    Err(err) => {
+                        dbg!(err);
                     }
                 }
             }
-            Err(_) => {}
         };
 
         ctx.request_repaint();

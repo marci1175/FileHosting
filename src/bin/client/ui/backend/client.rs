@@ -1,23 +1,15 @@
 use messages::HostRequest;
 
-use crate::main;
 
-use self::messages::Ping;
 
-use std::{fs, path::PathBuf, vec};
-use tokio::sync::mpsc::{self, Receiver, Sender};
+use tokio::sync::mpsc::{Receiver, Sender};
 
-use tonic::{
-    async_trait,
-    transport::{Endpoint, Server},
-    Request, Response, Status,
-};
 
 pub mod messages {
     tonic::include_proto!("file_hosting");
 }
 
-use CommonDefinitions::{ClientRequest, ServerFile, ServerList};
+use CommonDefinitions::ClientRequest;
 
 //We use the reciver to get what the main thread wants to recive, we use the sender to send back the response from the server
 

@@ -1,7 +1,6 @@
-use egui::{vec2, Color32, Response, RichText};
-use std::{fs, path::PathBuf, sync::Arc};
+use egui::{vec2, Color32, RichText};
 use tokio::{sync::mpsc, task::JoinHandle};
-use CommonDefinitions::{iter_folder, render_path};
+use CommonDefinitions::render_path;
 use CommonDefinitions::{FolderItem, PathItem};
 
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -180,7 +179,7 @@ impl eframe::App for Server {
 
                         //force ownership
                         let password = self.server_password.clone();
-                        let port = self.server_port.clone();
+                        let port = self.server_port;
                         let folder = self.shared_folders.clone();
                         //Server
                         self.server = Some(tokio::spawn(async move {
