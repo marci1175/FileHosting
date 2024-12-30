@@ -3,7 +3,7 @@ use std::{
     fmt::Debug,
     fs::{self},
     path::PathBuf,
-    time::{Duration, SystemTime},
+    time::SystemTime,
 };
 
 ///Master packet, when asking for the file
@@ -153,16 +153,6 @@ impl FolderItem {
             entries: iter_folder(&path),
         }
     }
-}
-
-fn fetch_time_from_secs(secs: u64) -> Duration {
-    std::time::SystemTime::now()
-        .duration_since(
-            SystemTime::UNIX_EPOCH
-                .checked_add(Duration::from_secs(secs))
-                .unwrap(),
-        )
-        .unwrap()
 }
 
 //It returns which file button it has been clicked on
