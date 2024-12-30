@@ -123,8 +123,7 @@ impl eframe::App for Client {
                                     match client::connect(ip, password, main_sx, this_rx).await {
                                         Ok(_) => {}
                                         Err(err) => {
-                                            dbg!(err.downcast::<String>());
-                                            // println!("{err}");
+                                            dbg!(err.downcast::<String>().unwrap());
                                         }
                                     };
                                 });
@@ -136,7 +135,7 @@ impl eframe::App for Client {
 
                                 //Stop the connection thread gracefully
                                 tokio::spawn(async move {
-                                    dbg!(this_sx.send(None).await);
+                                    dbg!(this_sx.send(None).await.unwrap());
                                 });
 
                                 //reset state
@@ -203,7 +202,7 @@ impl eframe::App for Client {
 
                 //Destroy local connection
                 tokio::spawn(async move {
-                    sx.send(None).await;
+                    sx.send(None).await.unwrap();
                 });
 
                 self.invalid_password = true;
