@@ -58,7 +58,7 @@ impl eframe::App for Server {
             ui.horizontal(|ui| {
                 //Display hint
                 if self.shared_folders.is_empty() {
-                    
+
                     ui.label("Add a folder to the shared folders");
 
                 } else {
@@ -66,6 +66,7 @@ impl eframe::App for Server {
                     ui.label(format!("Added folders: {}", self.shared_folders.len()));
 
                 }
+                
                 //Add folder
                 ui.add_enabled_ui(self.server.is_none(), |ui| {
                     if ui.button("Add folder").clicked() {
@@ -80,6 +81,7 @@ impl eframe::App for Server {
                 })
                 .response
                 .on_hover_text(
+                    
                     //Display warning message
                     if self.server.is_some() {
                         "You cannot add folders while the server is running"
