@@ -69,19 +69,25 @@ impl eframe::App for Server {
                 
                 //Add folder
                 ui.add_enabled_ui(self.server.is_none(), |ui| {
+                    
                     if ui.button("Add folder").clicked() {
+
                         //Add folder
                         if let Some(added_folders) = rfd::FileDialog::new().pick_folders() {
+
                             for folder in added_folders {
+
                                 self.shared_folders
                                     .push(PathItem::Folder(FolderItem::new(folder)));
+
                             }
+
                         };
                     }
                 })
                 .response
                 .on_hover_text(
-                    
+
                     //Display warning message
                     if self.server.is_some() {
                         "You cannot add folders while the server is running"
