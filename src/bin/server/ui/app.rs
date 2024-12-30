@@ -7,14 +7,11 @@ use common_definitions::{FolderItem, PathItem};
 #[serde(default)]
 pub struct Server {
     shared_folders: Vec<PathItem>,
-
     //Server doe not persist
     #[serde(skip)]
     server: Option<JoinHandle<()>>,
-
     server_password: String,
     server_port: i64,
-
     #[serde(skip)]
     rx: mpsc::Receiver<()>,
     #[serde(skip)]
